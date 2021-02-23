@@ -1,14 +1,17 @@
 # The first part is the server side programming
 
+
+#**************************************************************
 from threading import Thread 
 import socket
+#**************************************************************
 host = '127.0.0.1'
 port = 8080
 clients = {}
 addresses = {}
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.bind((host,port))
-def handle_clients(conn, address):
+def handle_clients(conn, address):                            # To handle the incoming requests from the multiple clients
     name = conn.recv(1024).decode()
     welcome = "Welcome "+name+" you can #quit if you are feeling uncomfortable"
     conn.send(bytes(welcome,'utf8'))
@@ -24,11 +27,11 @@ def handle_clients(conn, address):
             conn.close()
             del clients[conn]
             broadcast(bytes(name+' has left the chat room'))
-def acc():
+def acc():                                              # To add the clients to the chat room till there are clients
     while True:
         client_conn,client_add = sock.accept()
         print(client_add, " has connected")
-        client_conn.send("Welcome to the sexy chat room, lets start sex chat".encode('utf8'))
+        client_conn.send("Welcome to the chat room, lets start chat".encode('utf8'))
         addresses[client_conn] = client_add
         Thread(target=handle_clients, args=(client_conn,client_add)).start()
 def broadcast(msg, prefix=''):
@@ -67,7 +70,7 @@ def on_closing():
     my_msg.set("#quit")
     send()
     
-window = Tk()
+window = Tk()                                                          # We make a GUI window to chat and define the functions for the buttons
 window.title("Chat Room Application")
 window.configure(bg = "Green")
 message_frame = Frame(window, height=10, width=100, bg='red')
@@ -93,4 +96,4 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((Host, Port))
 receive_Thread = Thread(target=receive)
 receive_Thread.start()
-mainloop()
+mainloop()                                                      
