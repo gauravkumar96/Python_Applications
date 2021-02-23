@@ -1,0 +1,96 @@
+# The first part is the server side programming
+
+from threading import Thread 
+import socket
+host = '127.0.0.1'
+port = 8080
+clients = {}
+addresses = {}
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.bind((host,port))
+def handle_clients(conn, address):
+    name = conn.recv(1024).decode()
+    welcome = "Welcome "+name+" you can #quit if you are feeling uncomfortable"
+    conn.send(bytes(welcome,'utf8'))
+    msg = name + " has recently joined the chat room"
+    broadcast(bytes(msg,'utf8'))
+    client[conn] = name
+    while True:
+        msg = conn.recv(1024)
+        if msg!= bytes('#quit','utf8'):
+            broadcast(msg,name+":")
+        else:
+            conn.send(bytes('#quit','utf8'))
+            conn.close()
+            del clients[conn]
+            broadcast(bytes(name+' has left the chat room'))
+def acc():
+    while True:
+        client_conn,client_add = sock.accept()
+        print(client_add, " has connected")
+        client_conn.send("Welcome to the sexy chat room, lets start sex chat".encode('utf8'))
+        addresses[client_conn] = client_add
+        Thread(target=handle_clients, args=(client_conn,client_add)).start()
+def broadcast(msg, prefix=''):
+    for x in clients:
+        x.send(bytes(prefix,'utf8')+msg)
+if __name__ == "__main__":
+    sock.listen(5)
+    print("The server is active and listening to the clients")
+    t1 = Thread(target = acc)
+    t1.start()
+    t1.join()
+    
+    
+# The second side is the Client side Programming
+
+import tkinter
+import socket
+from tkinter import *
+from threading import Thread
+def receive():
+    while True:
+        try:
+            msg = s.recv(1024).decode('utf8')
+            msg_list.insert(tkinter.END,msg)
+        except:
+            print("There is an error receiving this message")
+def send():
+    msg = my_msg.get()
+    my_msg.set("")
+    s.send(bytes(msg,'utf8'))
+    if msg == '#quit':
+        s.close()
+        window.close()
+        
+def on_closing():
+    my_msg.set("#quit")
+    send()
+    
+window = Tk()
+window.title("Chat Room Application")
+window.configure(bg = "Green")
+message_frame = Frame(window, height=10, width=100, bg='red')
+message_frame.pack()
+my_msg = StringVar()
+my_msg.set("")
+scroll_bar = Scrollbar(message_frame)
+msg_list = Listbox(message_frame, height = 15,width = 100, bg = 'red',yscrollcommand = scroll_bar.set)
+scroll_bar.pack(side=RIGHT,fill=Y)
+msg_list.pack(side=LEFT, fill=BOTH)
+msg_list.pack()
+label= Label(window, text='Enter the message', fg = 'blue', font = 'Aeria', bg = 'red')
+label.pack()
+entry_field = Entry(window,textvariable=my_msg, fg='red', width=50)
+entry_field.pack()
+send_button = Button(window, text='Send', font='Aerial', fg = 'white',command=send)
+send_button.pack()
+quit_button = Button(window, text = 'Quit', font='Aerial', fg = 'white',command=on_closing)
+quit_button.pack()
+Host = '127.0.0.1'
+Port = 8080
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((Host, Port))
+receive_Thread = Thread(target=receive)
+receive_Thread.start()
+mainloop()
